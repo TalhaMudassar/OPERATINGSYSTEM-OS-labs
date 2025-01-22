@@ -110,6 +110,7 @@ int main(int argc, char *argv[]) {
     int thirdmax = *((int *)ret1);
     printf("The third max in the array is: %d\n", thirdmax);
 
+
     double *stats_results = (double *)ret2;
     printf("Mean: %.2f\n", stats_results[0]);
     printf("Median: %.2f\n", stats_results[1]);
