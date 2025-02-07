@@ -1,47 +1,50 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <unistd.h>
 
-// Declare a binary semaphore
+#define MAX_RESOURCES 3
+#define NUM_THREADS 5
+
 sem_t semaphore;
 
-void *produce_data(void *arg)
+void *thread_function(void *arg)
 {
-    printf("Thread 1 (Producer) is producing data\n");
-    
-    // Simulate data production
-    sleep(1);
-    
-    // Signal that data is ready for consumption
-    sem_post(&semaphore);
-    return NULL;
-}
+    int thread_id = *((int *)arg);
+    free(arg);
 
-void *consume_data(void *arg)
-{
-    // Wait for data to be produced
+    printf("Thread %d is trying to access the resource...\n", thread_id);
+
     sem_wait(&semaphore);
-    
-    printf("Thread 2 (Consumer) is consuming data\n");
+
+    printf("Thread %d is using the resource...\n", thread_id);
+    sleep(2);
+
+    sem_post(&semaphore);
+    printf("Thread %d has finished using the resource.\n", thread_id);
+
     return NULL;
 }
 
 int main()
 {
-    pthread_t producer_thread, consumer_thread;
+    pthread_t threads[NUM_THREADS];
 
-    // Initialize the semaphore with initial value 0 (locked)
-    sem_init(&semaphore, 0, 0);
+    sem_init(&semaphore, 0, MAX_RESOURCES);
 
-    // Create producer and consumer threads
-    pthread_create(&producer_thread, NULL, produce_data, NULL);
-    pthread_create(&consumer_thread, NULL, consume_data, NULL);
+    for (int i = 0; i < NUM_THREADS; i++)
+    {
+        int *thread_id = malloc(sizeof(int));
+        *thread_id = i + 1;
+        pthread_create(&threads[i], NULL, thread_function, thread_id);
+    }
 
-    // Wait for threads to finish execution
-    pthread_join(producer_thread, NULL);
-    pthread_join(consumer_thread, NULL);
+    for (int i = 0; i < NUM_THREADS; i++)
+    {
+        pthread_join(threads[i], NULL);
+    }
 
-    // Destroy the semaphore
     sem_destroy(&semaphore);
 
     return 0;
